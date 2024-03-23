@@ -6,7 +6,7 @@ class Network {
 
     let i = 1;
     this.nodes = [];
-    const nodeFactory = new NodeFactory(300);
+    const nodeFactory = new NodeFactory(150,300);
 
     while (i <= numOfNodes) {
       this.nodes.push(nodeFactory.createNode(i));
