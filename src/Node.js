@@ -4,10 +4,11 @@ class Node {
 
   // The node chooses a random time between minElectionTimeout and maxElectionTimeout 
   // as election timeout.
-  constructor(name, minElectionTimeout, maxElectionTimeout, state = NODE_STATE.FOLLOWER, term = 1) {
+  constructor(name, minElectionTimeout, maxElectionTimeout, heartbeat, state = NODE_STATE.FOLLOWER, term = 1) {
     this.name = name;
     this.minElectionTimeout = minElectionTimeout;
     this.maxElectionTimeout = maxElectionTimeout;
+    this.heartbeat = heartbeat;
 
     this.state = state;
     this.term = term;
