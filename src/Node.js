@@ -1,11 +1,11 @@
-import {NODE_STATE} from "./types"
+import {MESSAGE_TYPE, NODE_STATE} from "./types"
 import {Entry} from "./Entry"
 
 class Node {
 
   // The node chooses a random time between minElectionTimeout and maxElectionTimeout 
   // as election timeout.
-  constructor(name, minElectionTimeout, maxElectionTimeout, heartbeat, state = NODE_STATE.FOLLOWER, term = 1) {
+  constructor(name, minElectionTimeout, maxElectionTimeout, heartbeat, broadcastFn, state = NODE_STATE.FOLLOWER, term = 1) {
     this.name = name;
     this.minElectionTimeout = minElectionTimeout;
     this.maxElectionTimeout = maxElectionTimeout;
@@ -21,6 +21,8 @@ class Node {
     
     // Reset electionInterval
     this.electionInterval = this.startInterval() 
+
+    this.broadcastFn = broadcastFn || (() => null);
   }
 
   appendLog(term,index,content){
@@ -50,7 +52,7 @@ class Node {
   }
 
   timedOut(){
-    console.log("Election timout complete at node: ", this.name, "after timeout ", this.electionTimeout);
+    // console.log("Election timout complete at node: ", this.name, "after timeout ", this.electionTimeout);
     // If leader is present in the network, do nothing & return.
 
     // If leader is not present, then change state to candidate and send out requestVotes request to all other nodes.
@@ -61,13 +63,30 @@ class Node {
     return [term,index].join("_")
   }
 
+  startHeartbeatBroadcast() {
+    this.heartbeatInterval = setInterval(() => {
+      this.broadcastFn({
+        type: MESSAGE_TYPE.HEARTBEAT,
+      }, -1)
+    }, this.heartbeat);
+  }
+
   setLeader() {
     this.state = NODE_STATE.LEADER
-    console.log('Leader updated to', this.name);
+    this.startHeartbeatBroadcast();
   }
 
   setFollower() {
     this.state = NODE_STATE.FOLLOWER;
+    this.heartbeatInterval && clearInterval(this.heartbeatInterval);
+  }
+
+  onMessageReceived(event) {
+    const msg = event.data;
+
+    if (msg.type === MESSAGE_TYPE.HEARTBEAT) {
+      console.log('Heartbeat received from leader', this.name);
+    }
   }
 }
 

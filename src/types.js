@@ -3,3 +3,7 @@ export const NODE_STATE = Object.freeze({
     LEADER: 1, 
     CANDIATE: 2,
 });
+
+export const MESSAGE_TYPE = Object.freeze({
+    HEARTBEAT: 0
+});

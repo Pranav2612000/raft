@@ -10,14 +10,24 @@ class Network {
 
     let i = 1;
     this.nodes = [];
+    this.senderBcs = [];
+    this.receiverBcs = [];
     const nodeFactory = new NodeFactory(
       Network.MIN_ELECTION_TIMEOUT,
       Network.MAX_ELECTION_TIMEOUT,
-      Network.HEARTBEAT
+      Network.HEARTBEAT,
+      this.broadcastFn,
     );
 
     while (i <= numOfNodes) {
-      this.nodes.push(nodeFactory.createNode(i));
+      const node = nodeFactory.createNode(i);
+      const senderBc = new BroadcastChannel(i);
+      const receiverBc = new BroadcastChannel(i);
+      this.nodes.push(node);
+      this.senderBcs.push(senderBc);
+      receiverBc.onmessage = (event) => {
+        node.onMessageReceived(event);
+      };
       i++;
     }
 
@@ -32,6 +42,16 @@ class Network {
     }
     this.leader = index;
     this.nodes[index].setLeader();
+  }
+
+  broadcastFn = (msg, receiverIndex) => {
+    if (receiverIndex === -1) {
+      this.senderBcs.forEach((bc) => {
+        bc.postMessage(msg);
+      });
+    } else {
+      this.senderBcs[receiverIndex].postMessage(msg);
+    }
   }
 }
 

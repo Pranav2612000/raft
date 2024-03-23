@@ -1,10 +1,11 @@
 import Node from './Node';
 
 class NodeFactory {
-  constructor(minElectionTimeout, maxElectionTimeout, heartbeat) {
+  constructor(minElectionTimeout, maxElectionTimeout, heartbeat, broadcastFn) {
     this.minElectionTimeout = minElectionTimeout;
     this.maxElectionTimeout = maxElectionTimeout;
     this.heartbeat = heartbeat;
+    this.broadcastFn = broadcastFn;
   }
 
   createNode(name) {
@@ -13,6 +14,7 @@ class NodeFactory {
       this.minElectionTimeout,
       this.maxElectionTimeout,
       this.heartbeat,
+      this.broadcastFn,
     );
   }
 }
