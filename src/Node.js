@@ -1,4 +1,5 @@
 import {NODE_STATE} from "./types"
+import {Entry} from "./Entry"
 
 class Node {
 
@@ -13,8 +14,9 @@ class Node {
     this.state = state;
     this.term = term;
 
-    // A Map object iterates its elements in insertion order — a for...of loop returns an array of [key, value] for each iteration.
-    this.logs = new Map()
+    // A Map object iterates its elements in insertion order
+    // A for...of loop returns an array of [key, value] for each iteration.
+    this.logs = new Map<String,any>{}
     this.db = []
     
     // Reset electionInterval
@@ -23,6 +25,14 @@ class Node {
 
   appendLog(term,index,content){
     this.logs.set(this.createKey(term,index),content)
+  }
+
+  commit(term,index){
+    key = this.createKey(term,index)
+    if((content = this.logs.get()) != undefined){
+      this.db.push(Entry(content, (new Date()).getTime()))
+      this.logs.delete(key)
+    }
   }
 
   startInterval(){
