@@ -1,6 +1,9 @@
 class Node {
-  contructor(name, backoffTime) {
+
+  constructor(name, minElectionTimeout, maxElectionTimeout, state = NODE_STATE.FOLLOWER) {
     this.name = name;
-    this.backoffTime;
+    this.minElectionTimeout = minElectionTimeout;
+    this.maxElectionTimeout = maxElectionTimeout;
+    this.state = state
   }
 }

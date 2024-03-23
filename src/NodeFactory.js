@@ -1,11 +1,12 @@
 import Node from './Node';
 
 class NodeFactory {
-  constructor(backoffTime) {
-    this.backoffTime = backoffTime;
+  constructor(minElectionTimeout, maxElectionTimeout) {
+    this.minElectionTimeout = minElectionTimeout;
+    this.maxElectionTimeout = maxElectionTimeout;
   }
 
   createNode(name) {
-    return new Node(name, this.backoffTime);
+    return new Node(name, this.minElectionTimeout,this.maxElectionTimeout);
   }
 }
