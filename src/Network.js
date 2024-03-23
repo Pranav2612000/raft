@@ -20,6 +20,18 @@ class Network {
       this.nodes.push(nodeFactory.createNode(i));
       i++;
     }
+
+    // index of the current leader.
+    // We start the network with no leader so we set this to undefined
+    this.leader = undefined;
+  }
+
+  setLeader(index) {
+    if (this.leader) {
+      this.nodes[this.leader].setFollower();
+    }
+    this.leader = index;
+    this.nodes[index].setLeader();
   }
 }
 

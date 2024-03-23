@@ -16,7 +16,7 @@ class Node {
 
     // A Map object iterates its elements in insertion order
     // A for...of loop returns an array of [key, value] for each iteration.
-    this.logs = new Map<String,any>{}
+    this.logs = new Map();
     this.db = []
     
     // Reset electionInterval
@@ -59,6 +59,15 @@ class Node {
 
   createKey(term, index){
     return [term,index].join("_")
+  }
+
+  setLeader() {
+    this.state = NODE_STATE.LEADER
+    console.log('Leader updated to', this.name);
+  }
+
+  setFollower() {
+    this.state = NODE_STATE.FOLLOWER;
   }
 }
 
