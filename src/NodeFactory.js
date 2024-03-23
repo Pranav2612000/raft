@@ -9,3 +9,4 @@ class NodeFactory {
     return new Node(name, this.backoffTime);
   }
 }
+export default NodeFactory;

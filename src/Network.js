@@ -10,6 +10,9 @@ class Network {
 
     while (i <= numOfNodes) {
       this.nodes.push(nodeFactory.createNode(i));
+      i++;
     }
   }
 }
+
+export default Network;
