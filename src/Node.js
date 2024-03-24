@@ -11,6 +11,7 @@ class Node {
     maxElectionTimeout,
     heartbeat,
     broadcastFn,
+    onElectionTimeoutUpdate,
     state = NODE_STATE.FOLLOWER,
     term = 0
   ) {
@@ -29,6 +30,7 @@ class Node {
     this.db = [];
 
     // Reset electionInterval
+    this.onElectionTimeoutUpdate = onElectionTimeoutUpdate;
     this.electionInterval = this.startElectionInterval();
 
     this.votedFor = null;
@@ -50,6 +52,7 @@ class Node {
 
   startElectionInterval() {
     this.electionTimeout = this.getNewElectionTimeout();
+    this.onElectionTimeoutUpdate(this.nodeId);
     return setInterval(() => this.timedOut(), this.electionTimeout);
   }
 
@@ -157,7 +160,8 @@ class Node {
           " at node ",
           this.nodeId,
           "TERM = ",
-          msg.voteTerm
+          msg.voteTerm,
+          { msg }
         );
         this.handleVoteRequest(msg);
         return;
@@ -169,7 +173,8 @@ class Node {
           " by node ",
           this.nodeId,
           "VOTE = ",
-          msg.vote
+          msg.vote,
+          { msg }
         );
         this.handleCastedVote(msg);
         return;

@@ -6,8 +6,10 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./src/canvas";
 document.querySelector("#app").innerHTML = `
   <div class="main">
     <h1>Raft</h1>
-    <canvas id='network' width=${CANVAS_WIDTH} height=${CANVAS_HEIGHT}>
-    </canvas>
+    <div id='board'>
+      <canvas id='network' width=${CANVAS_WIDTH} height=${CANVAS_HEIGHT}></canvas>
+      <canvas id='nodes' width=${CANVAS_WIDTH} height=${CANVAS_HEIGHT} /></canvas>
+    </div>
     <button id="resetLeader">Reset Leader</button>
   </div>
 `;

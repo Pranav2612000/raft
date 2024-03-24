@@ -1,10 +1,10 @@
 import NodeFactory from "./NodeFactory";
-import { drawNodes, getNodePositions, showDataTransfer } from "./canvas";
+import { drawNode, drawNodes, getNodePositions, showDataTransfer } from "./canvas";
 import { NODE_STATE } from "./types";
 
 class Network {
-  static HEARTBEAT = 3000;
-  static MAX_ELECTION_TIMEOUT = 12000;
+  static HEARTBEAT = 4000;
+  static MAX_ELECTION_TIMEOUT = 9000;
   static MIN_ELECTION_TIMEOUT = 6000;
   static NETWORK_DELAY = 1000; // in milliseconds
 
@@ -19,7 +19,8 @@ class Network {
       Network.MIN_ELECTION_TIMEOUT,
       Network.MAX_ELECTION_TIMEOUT,
       Network.HEARTBEAT,
-      this.broadcastFn
+      this.broadcastFn,
+      this.onElectionTimeoutUpdate,
     );
 
     while (i <= numOfNodes) {
@@ -39,16 +40,15 @@ class Network {
     // We start the network with no leader so we set this to undefined
     this.leader = undefined;
 
-    this.canvas = document.getElementById("network");
+    this.canvas = { network: document.getElementById("network"), nodes: document.getElementById("nodes") };
     this.nodePositions = getNodePositions(this.nodes.length);
     this.renderCanvas();
   }
 
   renderCanvas() {
-    console.log({ positions: this.nodePositions });
-    const context = this.canvas.getContext("2d");
+    const context = this.canvas.nodes.getContext("2d");
 
-    drawNodes(context, this.nodePositions);
+    drawNodes(context, this.nodePositions, this.nodes);
   }
 
   setLeader(index) {
@@ -74,7 +74,7 @@ class Network {
           return;
         }
         await showDataTransfer(
-          this.canvas.getContext("2d"),
+          this.canvas,
           this.nodePositions[senderIndex - 1],
           this.nodePositions[index],
           Network.NETWORK_DELAY,
@@ -85,7 +85,7 @@ class Network {
       });
     } else {
       await showDataTransfer(
-        this.canvas.getContext("2d"),
+        this.canvas,
         this.nodePositions[senderIndex - 1],
         this.nodePositions[receiverIndex - 1],
         Network.NETWORK_DELAY,
@@ -95,6 +95,16 @@ class Network {
       this.senderBcs[receiverIndex - 1].postMessage(msg);
     }
   };
+
+  onElectionTimeoutUpdate = (nodeIndex) => {
+    const context = this.canvas?.nodes?.getContext("2d");
+
+    if (!context) {
+      return;
+    }
+
+    drawNode(context, this.nodePositions[nodeIndex - 1], this.nodes[nodeIndex - 1]);
+  }
 }
 
 export default Network;

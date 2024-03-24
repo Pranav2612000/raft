@@ -52,20 +52,57 @@ export function getNodePositions(numOfNodes) {
   return nodePositions;
 }
 
-export function drawNodes(context, nodePositions) {
-  for (let { x, y } of nodePositions) {
+export function drawNode(context, nodePosition, node) {
+  const {x, y} = nodePosition;
+  let lastFrameTimestamp = 0;
+  let angle = 0;
+  let electionTimeoutInSeconds = node.electionTimeout / 1000;
+
+  function animationFrame(milliseconds) {
+    // clear previous ui
+    context.clearRect(x - 30, y - 30, 70, 70);
+
+    // update angle
+    const elapsed = lastFrameTimestamp
+      ? milliseconds - lastFrameTimestamp
+      : 0;
+    const elapsedSeconds = elapsed / 1000;
+    angle += ((elapsedSeconds / electionTimeoutInSeconds) * 2 * Math.PI);
+    lastFrameTimestamp = milliseconds;
+
+    context.beginPath();
+    context.arc(x, y, 25, 0, angle);
+    context.stroke();
     drawCircle(context, x, y, 15, NODE_FILL_COLOR);
+
+    // exit if we've reached th end
+    if (angle > 2 * Math.PI) {
+      context.clearRect(x - 30, y - 30, 70, 70); // TODO: Come up with better values
+      drawCircle(context, x, y, 15, NODE_FILL_COLOR);
+      return;
+    }
+
+    window.requestAnimationFrame(animationFrame);
+  } 
+
+  window.requestAnimationFrame(animationFrame);
+}
+
+export function drawNodes(context, nodePositions, nodes) {
+  for (let i = 0; i < nodePositions.length; i++) {
+    drawNode(context, nodePositions[i], nodes[i]);
   }
 }
 
 export async function showDataTransfer(
-  context,
+  canvas,
   startCoords,
   endCoords,
   duration,
   nodePositions,
   type
 ) {
+  const networkContext = canvas.network.getContext("2d");
   let lastFrameTimestamp = 0;
   let x = startCoords.x;
   let y = startCoords.y;
@@ -89,7 +126,7 @@ export async function showDataTransfer(
   return new Promise((resolve, reject) => {
     function animationFrame(milliseconds) {
       // clear previous ui
-      context.clearRect(x - 15, y - 15, 30, 30); // TODO: Come up with better values
+      networkContext.clearRect(x - 15, y - 15, 30, 30); // TODO: Come up with better values
 
       // update particle location
       const elapsed = lastFrameTimestamp
@@ -102,8 +139,7 @@ export async function showDataTransfer(
       lastFrameTimestamp = milliseconds;
 
       // render particle with newer location
-      drawCircle(context, x, y, 10, colour);
-      drawNodes(context, nodePositions);
+      drawCircle(networkContext, x, y, 10, colour);
 
       // Exit if we've reached the end
       const newerData = distanceAndAngleBetweenTwoPoints(
@@ -113,6 +149,7 @@ export async function showDataTransfer(
         endCoords.y
       );
       if (Math.abs(Math.floor(data.angle) - Math.floor(newerData.angle)) > 2) {
+        networkContext.clearRect(x - 15, y - 15, 30, 30); // TODO: Come up with better values
         resolve();
         return;
       }

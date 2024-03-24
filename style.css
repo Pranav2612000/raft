@@ -25,7 +25,6 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -101,6 +100,18 @@ button:focus-visible {
   }
 }
 
+#board {
+  position: relative;
+}
+
+#nodes {
+  position: absolute;
+  z-index: 1;
+}
+
 #network {
+  position: absolute;
+  z-index: 2;
+
   border: 2px solid black;
 }
