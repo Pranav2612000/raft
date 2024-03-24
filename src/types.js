@@ -5,5 +5,7 @@ export const NODE_STATE = Object.freeze({
 });
 
 export const MESSAGE_TYPE = Object.freeze({
-    HEARTBEAT: 0
+    HEARTBEAT: 0,
+    REQUEST_VOTE: 1,
+    CAST_VOTE: 2,
 });
