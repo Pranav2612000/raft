@@ -65,7 +65,7 @@ class Node {
 
   startHeartbeatBroadcast() {
     this.heartbeatInterval = setInterval(() => {
-      this.broadcastFn({
+      this.broadcastFn(this.name, {
         type: MESSAGE_TYPE.HEARTBEAT,
       }, -1)
     }, this.heartbeat);

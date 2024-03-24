@@ -15,5 +15,5 @@ const NUM_NODES = 5; // Default number of nodes at the start
 
 console.log('Initializing network...');
 const network = new Network(NUM_NODES);
-// network.setLeader(0);
+network.setLeader(0);
 

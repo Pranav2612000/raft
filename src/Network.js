@@ -1,11 +1,12 @@
 import NodeFactory from './NodeFactory';
-import { drawNodes } from "./canvas";
+import { drawNodes, getNodePositions, showDataTransfer } from "./canvas";
 
 
 class Network {
-  static HEARTBEAT = 100;
+  static HEARTBEAT = 2000;
   static MAX_ELECTION_TIMEOUT = 300;
   static MIN_ELECTION_TIMEOUT = 150;
+  static NETWORK_DELAY = 2000; // in milliseconds
 
   constructor(numOfNodes) {
     this.numOfNodes = numOfNodes;
@@ -38,13 +39,15 @@ class Network {
     this.leader = undefined;
     
     this.canvas = document.getElementById('network');
+    this.nodePositions = getNodePositions(this.nodes.length);
     this.renderCanvas();
   }
 
   renderCanvas() {
+    console.log({ positions: this.nodePositions });
     const context = this.canvas.getContext('2d');
 
-    drawNodes(context, this.nodes.length);
+    drawNodes(context, this.nodePositions);
   }
 
   setLeader(index) {
@@ -55,13 +58,15 @@ class Network {
     this.nodes[index].setLeader();
   }
 
-  broadcastFn = (msg, receiverIndex) => {
+  broadcastFn = (senderIndex, msg, receiverIndex) => {
     if (receiverIndex === -1) {
-      this.senderBcs.forEach((bc) => {
+      this.senderBcs.forEach((bc, index) => {
+        showDataTransfer(this.canvas.getContext('2d'), this.nodePositions[senderIndex], this.nodePositions[index], Network.NETWORK_DELAY, this.nodePositions);
         bc.postMessage(msg);
       });
     } else {
-      this.senderBcs[receiverIndex].postMessage(msg);
+      showDataTransfer(this.canvas.getContext('2d'), this.nodePositions[senderIndex - 1], this.nodePositions[receiverIndex - 1], Network.NETWORK_DELAY, this.nodePositions);
+      this.senderBcs[receiverIndex - 1].postMessage(msg);
     }
   }
 }
