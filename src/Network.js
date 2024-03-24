@@ -69,6 +69,10 @@ class Network {
   broadcastFn = async (senderIndex, msg, receiverIndex) => {
     if (receiverIndex === -1) {
       this.senderBcs.forEach(async (bc, index) => {
+        // don't send messages to self
+        if (senderIndex - 1 === index) {
+          return;
+        }
         await showDataTransfer(
           this.canvas.getContext("2d"),
           this.nodePositions[senderIndex - 1],
