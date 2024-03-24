@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from "./Node";
 
 class NodeFactory {
   constructor(minElectionTimeout, maxElectionTimeout, heartbeat, broadcastFn) {
@@ -8,13 +8,14 @@ class NodeFactory {
     this.broadcastFn = broadcastFn;
   }
 
-  createNode(name) {
+  createNode(name, numOfNodes) {
     return new Node(
       name,
+      numOfNodes,
       this.minElectionTimeout,
       this.maxElectionTimeout,
       this.heartbeat,
-      this.broadcastFn,
+      this.broadcastFn
     );
   }
 }

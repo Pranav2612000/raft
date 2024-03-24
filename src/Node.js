@@ -6,6 +6,7 @@ class Node {
   // as election timeout.
   constructor(
     nodeId,
+    numOfNodes,
     minElectionTimeout,
     maxElectionTimeout,
     heartbeat,
@@ -14,6 +15,7 @@ class Node {
     term = 0
   ) {
     this.nodeId = nodeId;
+    this.numOfNodes = numOfNodes;
     this.minElectionTimeout = minElectionTimeout;
     this.maxElectionTimeout = maxElectionTimeout;
     this.heartbeat = heartbeat;
@@ -53,7 +55,7 @@ class Node {
 
   resetElectionInterval() {
     clearInterval(this.electionInterval);
-    return this.startElectionInterval();
+    this.electionInterval = this.startElectionInterval();
   }
 
   getNewElectionTimeout() {
@@ -111,6 +113,13 @@ class Node {
   }
 
   startHeartbeatBroadcast() {
+    // this.broadcastFn(
+    //   this.nodeId,
+    //   {
+    //     type: MESSAGE_TYPE.HEARTBEAT,
+    //   },
+    //   -1
+    // );
     this.heartbeatInterval = setInterval(() => {
       this.broadcastFn(
         this.nodeId,
@@ -137,16 +146,36 @@ class Node {
 
     switch (msg.type) {
       case MESSAGE_TYPE.HEARTBEAT: {
+        console.log("Heartbeat received from leader at node: ", this.nodeId);
         this.resetElectionInterval();
-        console.log("Heartbeat received from leader by node: ", this.nodeId);
         return;
       }
       case MESSAGE_TYPE.REQUEST_VOTE: {
+        console.log(
+          "Vote requested by node: ",
+          msg.nodeId,
+          " at node ",
+          this.nodeId,
+          "TERM = ",
+          msg.voteTerm
+        );
         this.handleRequestVote(msg);
         return;
       }
       case MESSAGE_TYPE.CAST_VOTE: {
+        console.log(
+          "Vote Received from node: ",
+          msg.nodeId,
+          " by node ",
+          this.nodeId,
+          "VOTE = ",
+          msg.vote
+        );
         this.handleCastedVote(msg);
+        return;
+      }
+      case MESSAGE_TYPE.NEW_NODE: {
+        this.numOfNodes += 1;
         return;
       }
       default: {
@@ -189,7 +218,7 @@ class Node {
         {
           type: MESSAGE_TYPE.CAST_VOTE,
           nodeId: this.nodeId,
-          term: cTerm,
+          term: this.term,
           vote: true,
         },
         cNodeId
@@ -200,7 +229,7 @@ class Node {
         {
           type: MESSAGE_TYPE.CAST_VOTE,
           nodeId: this.nodeId,
-          term: cTerm,
+          term: this.term,
           vote: false,
         },
         cNodeId
@@ -214,17 +243,23 @@ class Node {
     const voterTerm = msg.term;
     const granted = msg.vote;
 
-    if (this.state === this.CANDIATE && voterTerm === this.term && granted) {
+    if (
+      this.state === NODE_STATE.CANDIATE &&
+      voterTerm === this.term &&
+      granted
+    ) {
       this.votesReceived.add(voterId);
-      // check if quorum exists
+      if (this.votesReceived.size >= Math.ceil((this.numOfNodes + 1) / 2)) {
+        this.setLeader();
+      }
     } else if (voterTerm > this.term) {
       // There exists a node in the network with higher term number, so be the follower of that node
       this.term = voterTerm;
       this.state = NODE_STATE.FOLLOWER;
       this.votedFor = null;
       this.votesReceived = new Set();
-      this.resetElectionInterval();
     }
+    this.resetElectionInterval();
   }
 }
 

@@ -3,8 +3,8 @@ import { drawNodes, getNodePositions, showDataTransfer } from "./canvas";
 
 class Network {
   static HEARTBEAT = 2000;
-  static MAX_ELECTION_TIMEOUT = 60000;
-  static MIN_ELECTION_TIMEOUT = 30000;
+  static MAX_ELECTION_TIMEOUT = 9000;
+  static MIN_ELECTION_TIMEOUT = 6000;
   static NETWORK_DELAY = 2000; // in milliseconds
 
   constructor(numOfNodes) {
@@ -22,7 +22,7 @@ class Network {
     );
 
     while (i <= numOfNodes) {
-      const node = nodeFactory.createNode(i);
+      const node = nodeFactory.createNode(i, numOfNodes);
       const senderBc = new BroadcastChannel(i);
       const receiverBc = new BroadcastChannel(i);
       this.nodes.push(node);
@@ -57,25 +57,27 @@ class Network {
     this.nodes[index].setLeader();
   }
 
-  broadcastFn = (senderIndex, msg, receiverIndex) => {
+  broadcastFn = async (senderIndex, msg, receiverIndex) => {
     if (receiverIndex === -1) {
-      this.senderBcs.forEach((bc, index) => {
-        showDataTransfer(
+      this.senderBcs.forEach(async (bc, index) => {
+        await showDataTransfer(
           this.canvas.getContext("2d"),
           this.nodePositions[senderIndex - 1],
-          this.nodePositions[index - 1],
+          this.nodePositions[index],
           Network.NETWORK_DELAY,
-          this.nodePositions
+          this.nodePositions,
+          msg.type
         );
         bc.postMessage(msg);
       });
     } else {
-      showDataTransfer(
+      await showDataTransfer(
         this.canvas.getContext("2d"),
         this.nodePositions[senderIndex - 1],
         this.nodePositions[receiverIndex - 1],
         Network.NETWORK_DELAY,
-        this.nodePositions
+        this.nodePositions,
+        msg.type
       );
       this.senderBcs[receiverIndex - 1].postMessage(msg);
     }
