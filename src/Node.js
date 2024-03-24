@@ -159,7 +159,7 @@ class Node {
           "TERM = ",
           msg.voteTerm
         );
-        this.handleRequestVote(msg);
+        this.handleVoteRequest(msg);
         return;
       }
       case MESSAGE_TYPE.CAST_VOTE: {
@@ -184,7 +184,7 @@ class Node {
     }
   }
 
-  handleRequestVote(msg) {
+  handleVoteRequest(msg) {
     // extract fields from message
     const cNodeId = msg.nodeId;
     const cTerm = msg.voteTerm;
@@ -198,7 +198,7 @@ class Node {
 
     if (cTerm > this.term) {
       this.term = cTerm;
-      this.state = NODE_STATE.FOLLOWER;
+      this.setFollower();
       this.votedFor = null;
     }
     const logLastTerm = this.getLastTermFromLog();
@@ -255,7 +255,7 @@ class Node {
     } else if (voterTerm > this.term) {
       // There exists a node in the network with higher term number, so be the follower of that node
       this.term = voterTerm;
-      this.state = NODE_STATE.FOLLOWER;
+      this.setFollower();
       this.votedFor = null;
       this.votesReceived = new Set();
     }

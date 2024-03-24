@@ -3,7 +3,7 @@ import { drawNodes, getNodePositions, showDataTransfer } from "./canvas";
 import { NODE_STATE } from "./types";
 
 class Network {
-  static HEARTBEAT = 4000;
+  static HEARTBEAT = 3000;
   static MAX_ELECTION_TIMEOUT = 12000;
   static MIN_ELECTION_TIMEOUT = 6000;
   static NETWORK_DELAY = 1000; // in milliseconds
@@ -24,6 +24,7 @@ class Network {
 
     while (i <= numOfNodes) {
       const node = nodeFactory.createNode(i, numOfNodes);
+      console.log(`Created node ${node.nodeId} with term ${node.term}`);
       const senderBc = new BroadcastChannel(i);
       const receiverBc = new BroadcastChannel(i);
       this.nodes.push(node);
@@ -60,10 +61,8 @@ class Network {
 
   resetLeader() {
     this.nodes.forEach((node) => {
-      if (node.state === NODE_STATE.LEADER) {
-        node.setFollower();
-        return;
-      }
+      node.setFollower();
+      return;
     });
   }
 
