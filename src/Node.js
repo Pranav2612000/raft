@@ -121,6 +121,7 @@ class Node {
       -1
     );
     this.heartbeatInterval = setInterval(() => {
+      this.resetElectionInterval();
       this.broadcastFn(
         this.nodeId,
         {
