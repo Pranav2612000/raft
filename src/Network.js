@@ -1,4 +1,6 @@
 import NodeFactory from './NodeFactory';
+import { drawNodes } from "./canvas";
+
 
 class Network {
   static HEARTBEAT = 100;
@@ -34,6 +36,15 @@ class Network {
     // index of the current leader.
     // We start the network with no leader so we set this to undefined
     this.leader = undefined;
+    
+    this.canvas = document.getElementById('network');
+    this.renderCanvas();
+  }
+
+  renderCanvas() {
+    const context = this.canvas.getContext('2d');
+
+    drawNodes(context, this.nodes.length);
   }
 
   setLeader(index) {
