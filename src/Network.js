@@ -1,11 +1,12 @@
 import NodeFactory from "./NodeFactory";
 import { drawNodes, getNodePositions, showDataTransfer } from "./canvas";
+import { NODE_STATE } from "./types";
 
 class Network {
-  static HEARTBEAT = 2000;
-  static MAX_ELECTION_TIMEOUT = 9000;
+  static HEARTBEAT = 4000;
+  static MAX_ELECTION_TIMEOUT = 12000;
   static MIN_ELECTION_TIMEOUT = 6000;
-  static NETWORK_DELAY = 2000; // in milliseconds
+  static NETWORK_DELAY = 1000; // in milliseconds
 
   constructor(numOfNodes) {
     this.numOfNodes = numOfNodes;
@@ -55,6 +56,15 @@ class Network {
     }
     this.leader = index;
     this.nodes[index].setLeader();
+  }
+
+  resetLeader() {
+    this.nodes.forEach((node) => {
+      if (node.state === NODE_STATE.LEADER) {
+        node.setFollower();
+        return;
+      }
+    });
   }
 
   broadcastFn = async (senderIndex, msg, receiverIndex) => {

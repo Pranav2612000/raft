@@ -113,13 +113,13 @@ class Node {
   }
 
   startHeartbeatBroadcast() {
-    // this.broadcastFn(
-    //   this.nodeId,
-    //   {
-    //     type: MESSAGE_TYPE.HEARTBEAT,
-    //   },
-    //   -1
-    // );
+    this.broadcastFn(
+      this.nodeId,
+      {
+        type: MESSAGE_TYPE.HEARTBEAT,
+      },
+      -1
+    );
     this.heartbeatInterval = setInterval(() => {
       this.broadcastFn(
         this.nodeId,

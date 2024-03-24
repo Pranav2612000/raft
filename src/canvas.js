@@ -70,6 +70,10 @@ export async function showDataTransfer(
   let x = startCoords.x;
   let y = startCoords.y;
 
+  if (startCoords.x == endCoords.x && startCoords.y == endCoords.y) {
+    return;
+  }
+
   const colour = type === MESSAGE_TYPE.HEARTBEAT ? "#f8b1bb" : undefined;
 
   const data = distanceAndAngleBetweenTwoPoints(
