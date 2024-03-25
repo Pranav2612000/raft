@@ -190,6 +190,9 @@ class Node {
       }
       case MESSAGE_TYPE.NEW_NODE: {
         this.nodes.push(msg.nodeId);
+        if (this.state == NODE_STATE.LEADER) {
+          this.replicateLog(msg.nodeId);
+        }
         return;
       }
       case MESSAGE_TYPE.LOG_REQUEST: {
@@ -299,7 +302,7 @@ class Node {
   replicateLog(followerId) {
     const leaderId = this.nodeId;
 
-    const prefixLen = this.sentLength.get(followerId);
+    const prefixLen = this.sentLength.get(followerId) || 0;
     const suffix = this.logs.slice(prefixLen);
 
     let prefixTerm = 0;
