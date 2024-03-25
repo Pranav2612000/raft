@@ -5,7 +5,7 @@ export const CANVAS_WIDTH = 470;
 const NETWORK_RADIUS = 200; // Radius of the circle around which the nodes are placed
 const NODE_FILL_COLOR = "#e3dada";
 
-function drawCircle(context, centerX, centerY, radius, fillStyle, text) {
+function drawCircle(context, centerX, centerY, radius, fillStyle, text, textSize = '20px') {
   context.beginPath();
   context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
   if (fillStyle) {
@@ -17,7 +17,7 @@ function drawCircle(context, centerX, centerY, radius, fillStyle, text) {
   context.stroke();
 
   if (text) {
-    context.font = '20px Georgia';
+    context.font = `${textSize} Georgia`;
     context.fillStyle = 'black';
     context.textAlign = 'center';
     // Keep text as single letter
@@ -128,6 +128,50 @@ export function clearNodes(context, nodePositions) {
   }
 }
 
+function getMessageConfig(messageType) {
+  switch (messageType) {
+    case MESSAGE_TYPE.HEARTBEAT: {
+      return {
+        color: '#f8b1bb',
+        size: 5,
+        text: 'H',
+        textSize: '10px'
+      }
+    }
+
+    case MESSAGE_TYPE.LOG_REQUEST: {
+      return {
+        color: '#a3cff5',
+        size: 10,
+        text: 'L',
+        textSize: '12px'
+      }
+    }
+
+    case MESSAGE_TYPE.REQUEST_VOTE: {
+      return {
+        color: '#e6e5b1',
+        size: 10,
+        text: 'R',
+        textSize: '12px'
+      }
+    }
+
+    /*
+    case MESSAGE_TYPE.CAST_VOTE: {
+
+    }
+    */
+
+    default: {
+      return {
+        color: undefined,
+        size: 10
+      }
+    }
+  }
+}
+
 export async function showDataTransfer(
   canvas,
   startCoords,
@@ -148,7 +192,8 @@ export async function showDataTransfer(
     return;
   }
 
-  const colour = type === MESSAGE_TYPE.HEARTBEAT ? "#f8b1bb" : undefined;
+
+  const config = getMessageConfig(type);
 
   const data = distanceAndAngleBetweenTwoPoints(
     startCoords.x,
@@ -176,7 +221,7 @@ export async function showDataTransfer(
       lastFrameTimestamp = milliseconds;
 
       // render particle with newer location
-      drawCircle(networkContext, x, y, 10, colour);
+      drawCircle(networkContext, x, y, config.size, config.color, config.text, config.textSize);
 
       // Exit if we've reached the end
       const newerData = distanceAndAngleBetweenTwoPoints(
