@@ -42,7 +42,6 @@ class Node {
     this.ackedLength = new Map();
 
     this.commitLength = 0;
-
   }
 
   appendLog(prefixLen, leaderCommit, suffix) {
@@ -56,7 +55,7 @@ class Node {
     }
 
     if (prefixLen + suffix.length > this.logs.length) {
-      for (let i = (this.logs.length - prefixLen); i < suffix.length; i++) {
+      for (let i = this.logs.length - prefixLen; i < suffix.length; i++) {
         this.logs.push(suffix[i]);
       }
     }
@@ -121,9 +120,7 @@ class Node {
   }
 
   getLastTermFromLog() {
-    return this.logs.length > 0
-      ? this.logs[this.logs.length - 1].term
-      : 0;
+    return this.logs.length > 0 ? this.logs[this.logs.length - 1].term : 0;
   }
 
   createKey(term, index) {
@@ -196,12 +193,12 @@ class Node {
         return;
       }
       case MESSAGE_TYPE.LOG_REQUEST: {
-        console.log('LOG_REQUEST', {msg});
+        console.log("LOG_REQUEST", { msg });
         return this.handleLogRequest(msg);
       }
 
       case MESSAGE_TYPE.LOG_RESPONSE: {
-        console.log('LOG_RESPONSE', {msg});
+        console.log("LOG_RESPONSE", { msg });
         return this.handleLogResponse(msg);
       }
 
@@ -217,7 +214,6 @@ class Node {
     const cTerm = msg.voteTerm;
     const CLogLength = msg.logLength;
     const cLogLastTerm = msg.logLastTerm;
-
 
     if (cTerm > this.term) {
       this.term = cTerm;
@@ -304,22 +300,26 @@ class Node {
     const leaderId = this.nodeId;
 
     const prefixLen = this.sentLength.get(followerId);
-    const suffix = this.logs.slice(prefixLen - 1);
+    const suffix = this.logs.slice(prefixLen);
 
     let prefixTerm = 0;
     if (prefixLen > 0) {
       prefixTerm = this.logs[prefixLen - 1].term;
     }
 
-    this.broadcastFn(this.nodeId, {
-      type: MESSAGE_TYPE.LOG_REQUEST,
-      leaderId: leaderId,
-      currentTerm: this.term,
-      prefixLen: prefixLen,
-      prefixTerm: prefixTerm,
-      commitLength: this.commitLength,
-      suffix: suffix,
-    }, followerId)
+    this.broadcastFn(
+      this.nodeId,
+      {
+        type: MESSAGE_TYPE.LOG_REQUEST,
+        leaderId: leaderId,
+        currentTerm: this.term,
+        prefixLen: prefixLen,
+        prefixTerm: prefixTerm,
+        commitLength: this.commitLength,
+        suffix: suffix,
+      },
+      followerId
+    );
   }
 
   handleLogRequest(msg) {
@@ -329,7 +329,7 @@ class Node {
       prefixLen,
       prefixTerm,
       commitLength,
-      suffix
+      suffix,
     } = msg;
 
     if (currentTerm > this.term) {
@@ -343,39 +343,43 @@ class Node {
       this.setFollower();
     }
 
-    const logOk = (this.logs.length >= prefixLen) && 
+    const logOk =
+      this.logs.length >= prefixLen &&
       (prefixLen == 0 || this.logs[prefixLen - 1].term == prefixTerm);
 
     if (currentTerm == this.term && logOk) {
-      this.appendLog(prefixLen, commitLength,suffix);
+      this.appendLog(prefixLen, commitLength, suffix);
 
       const ack = prefixLen + suffix.length;
 
-      this.broadcastFn(this.nodeId, {
-        type: MESSAGE_TYPE.LOG_RESPONSE,
-        nodeId: this.nodeId,
-        currentTerm: this.term,
-        ack: ack,
-        success: true,
-      }, leaderId)
+      this.broadcastFn(
+        this.nodeId,
+        {
+          type: MESSAGE_TYPE.LOG_RESPONSE,
+          nodeId: this.nodeId,
+          currentTerm: this.term,
+          ack: ack,
+          success: true,
+        },
+        leaderId
+      );
     } else {
-      this.broadcastFn(this.nodeId, {
-        type: MESSAGE_TYPE.LOG_RESPONSE,
-        nodeId: this.nodeId,
-        currentTerm: this.term,
-        ack: 0,
-        success: false,
-      }, leaderId)
+      this.broadcastFn(
+        this.nodeId,
+        {
+          type: MESSAGE_TYPE.LOG_RESPONSE,
+          nodeId: this.nodeId,
+          currentTerm: this.term,
+          ack: 0,
+          success: false,
+        },
+        leaderId
+      );
     }
   }
 
-  handleLogResponse (msg) {
-    const {
-      nodeId,
-      currentTerm,
-      ack,
-      success
-    } = msg;
+  handleLogResponse(msg) {
+    const { nodeId, currentTerm, ack, success } = msg;
 
     if (currentTerm == this.term && this.state == NODE_STATE.LEADER) {
       if (success == true && ack >= this.ackedLength.get(nodeId)) {
@@ -395,7 +399,7 @@ class Node {
     }
   }
 
-  receiveData (data) {
+  receiveData(data) {
     if (this.state != NODE_STATE.LEADER) {
       return;
     }
