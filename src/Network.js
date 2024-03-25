@@ -70,7 +70,7 @@ class Network {
   }
 
   createNode(nodeId) {
-    const node = this.nodeFactory.createNode(nodeId, this.nodeIds);
+    const node = this.nodeFactory.createNode(nodeId, this.nodeIds.slice());
     const senderBc = new BroadcastChannel(nodeId);
     const receiverBc = new BroadcastChannel(nodeId);
     this.senderBcs.push(senderBc);
