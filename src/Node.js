@@ -26,7 +26,8 @@ class Node {
 
     // A Map object iterates its elements in insertion order
     // A for...of loop returns an array of [key, value] for each iteration.
-    this.logs = new Map();
+    // log entry of the form { msg, term }
+    this.logs = [];
     this.db = [];
 
     // Reset electionInterval
@@ -36,17 +37,35 @@ class Node {
     this.votedFor = null;
     this.votesReceived = new Set();
     this.broadcastFn = broadcastFn || (() => null);
+
+    this.sentLength = new Map();
+    this.ackedLength = new Map();
+
+    this.commitLength = 0;
+
   }
 
-  appendLog(term, index, content) {
-    this.logs.set(this.createKey(term, index), content);
-  }
+  appendLog(prefixLen, leaderCommit, suffix) {
+    console.log({ prefixLen, leaderCommit, suffix });
+    if (suffix.length > 0 && this.logs.length > prefixLen) {
+      const index = Math.min(this.logs.length, prefixLen + suffix.length) - 1;
 
-  commit(term, index) {
-    key = this.createKey(term, index);
-    if ((content = this.logs.get()) != undefined) {
-      this.db.push(Entry(content, new Date().getTime()));
-      this.logs.delete(key);
+      if (this.logs[index].term != suffix[index - prefixLen].term) {
+        this.logs = this.logs.slice(0, prefixLen);
+      }
+    }
+
+    if (prefixLen + suffix.length > this.logs.length) {
+      for (let i = (this.logs.length - prefixLen); i < suffix.length; i++) {
+        this.logs.push(suffix[i]);
+      }
+    }
+
+    if (leaderCommit > this.commitLength) {
+      for (let i = this.commitLength; i < leaderCommit; i++) {
+        // deliver to application
+      }
+      this.commitLength = leaderCommit;
     }
   }
 
@@ -93,7 +112,7 @@ class Node {
         type: MESSAGE_TYPE.REQUEST_VOTE,
         nodeId: this.nodeId,
         voteTerm: this.term,
-        logLength: this.logs.size,
+        logLength: this.logs.length,
         //last term is taken from the last entry in logs.
         logLastTerm: this.getLastTermFromLog(),
       },
@@ -102,8 +121,8 @@ class Node {
   }
 
   getLastTermFromLog() {
-    return this.logs.size > 0
-      ? this.getTerm(Array.from(this.logs.keys())[this.logs.size - 1])
+    return this.logs.length > 0
+      ? this.logs[this.logs.length - 1].term
       : 0;
   }
 
@@ -138,6 +157,17 @@ class Node {
   setLeader() {
     this.state = NODE_STATE.LEADER;
     this.startHeartbeatBroadcast();
+
+    this.nodes.forEach((nodeId) => {
+      if (nodeId == this.nodeId) {
+        return;
+      }
+
+      this.sentLength.set(nodeId, this.logs.length);
+      this.ackedLength.set(nodeId, 0);
+
+      this.replicateLog(nodeId);
+    });
   }
 
   setFollower() {
@@ -150,33 +180,14 @@ class Node {
 
     switch (msg.type) {
       case MESSAGE_TYPE.HEARTBEAT: {
-        console.log("Heartbeat received from leader at node: ", this.nodeId);
         this.resetElectionInterval();
         return;
       }
       case MESSAGE_TYPE.REQUEST_VOTE: {
-        console.log(
-          "Vote requested by node: ",
-          msg.nodeId,
-          " at node ",
-          this.nodeId,
-          "TERM = ",
-          msg.voteTerm,
-          { msg }
-        );
         this.handleVoteRequest(msg);
         return;
       }
       case MESSAGE_TYPE.CAST_VOTE: {
-        console.log(
-          "Vote Received from node: ",
-          msg.nodeId,
-          " by node ",
-          this.nodeId,
-          "VOTE = ",
-          msg.vote,
-          { msg }
-        );
         this.handleCastedVote(msg);
         return;
       }
@@ -184,6 +195,16 @@ class Node {
         this.nodes.push(msg.nodeId);
         return;
       }
+      case MESSAGE_TYPE.LOG_REQUEST: {
+        console.log('LOG_REQUEST', {msg});
+        return this.handleLogRequest(msg);
+      }
+
+      case MESSAGE_TYPE.LOG_RESPONSE: {
+        console.log('LOG_RESPONSE', {msg});
+        return this.handleLogResponse(msg);
+      }
+
       default: {
         console.log("Unknown message type received at receiver channel !");
       }
@@ -206,7 +227,7 @@ class Node {
     const logLastTerm = this.getLastTermFromLog();
     const logOk =
       cLogLastTerm > logLastTerm ||
-      (cLogLastTerm === logLastTerm && CLogLength >= this.logs.size);
+      (cLogLastTerm === logLastTerm && CLogLength >= this.logs.length);
 
     // Okay to vote for same node twice
     if (
@@ -252,7 +273,22 @@ class Node {
     ) {
       this.votesReceived.add(voterId);
       if (this.votesReceived.size >= Math.ceil((this.nodes.length + 1) / 2)) {
+        // setting the current node as the leader
         this.setLeader();
+
+        /*
+        // moved to setLeader
+        this.nodes.forEach((nodeId) => {
+          if (nodeId == this.nodeId) {
+            return;
+          }
+
+          this.sentLength.set(nodeId, this.logs.length);
+          this.ackedLength.set(nodeId, 0);
+
+          this.replicateLog(nodeId);
+        });
+        */
       }
     } else if (voterTerm > this.term) {
       // There exists a node in the network with higher term number, so be the follower of that node
@@ -262,6 +298,119 @@ class Node {
       this.votesReceived = new Set();
     }
     this.resetElectionInterval();
+  }
+
+  replicateLog(followerId) {
+    const leaderId = this.nodeId;
+
+    const prefixLen = this.sentLength.get(followerId);
+    const suffix = this.logs.slice(prefixLen - 1);
+
+    let prefixTerm = 0;
+    if (prefixLen > 0) {
+      prefixTerm = this.logs[prefixLen - 1].term;
+    }
+
+    this.broadcastFn(this.nodeId, {
+      type: MESSAGE_TYPE.LOG_REQUEST,
+      leaderId: leaderId,
+      currentTerm: this.term,
+      prefixLen: prefixLen,
+      prefixTerm: prefixTerm,
+      commitLength: this.commitLength,
+      suffix: suffix,
+    }, followerId)
+  }
+
+  handleLogRequest(msg) {
+    const {
+      leaderId,
+      currentTerm,
+      prefixLen,
+      prefixTerm,
+      commitLength,
+      suffix
+    } = msg;
+
+    if (currentTerm > this.term) {
+      this.term = currentTerm;
+      this.votedFor = null;
+      this.votesReceived = new Set();
+      this.resetElectionInterval();
+    }
+
+    if (currentTerm == this.term) {
+      this.setFollower();
+    }
+
+    const logOk = (this.logs.length >= prefixLen) && 
+      (prefixLen == 0 || this.logs[prefixLen - 1].term == prefixTerm);
+
+    if (currentTerm == this.term && logOk) {
+      this.appendLog(prefixLen, commitLength,suffix);
+
+      const ack = prefixLen + suffix.length;
+
+      this.broadcastFn(this.nodeId, {
+        type: MESSAGE_TYPE.LOG_RESPONSE,
+        nodeId: this.nodeId,
+        currentTerm: this.term,
+        ack: ack,
+        success: true,
+      }, leaderId)
+    } else {
+      this.broadcastFn(this.nodeId, {
+        type: MESSAGE_TYPE.LOG_RESPONSE,
+        nodeId: this.nodeId,
+        currentTerm: this.term,
+        ack: 0,
+        success: false,
+      }, leaderId)
+    }
+  }
+
+  handleLogResponse (msg) {
+    const {
+      nodeId,
+      currentTerm,
+      ack,
+      success
+    } = msg;
+
+    if (currentTerm == this.term && this.state == NODE_STATE.LEADER) {
+      if (success == true && ack >= this.ackedLength.get(nodeId)) {
+        this.sentLength.set(nodeId, ack);
+        this.ackedLength.set(nodeId, ack);
+        // this.commit();
+      } else if (this.sentLength[nodeId] > 0) {
+        this.sentLength.set(nodeId, this.sentLength.get(nodeId) - 1);
+        this.replicateLog(nodeId);
+      }
+    } else if (currentTerm > this.term) {
+      this.term = currentTerm;
+      this.setFollower();
+      this.votedFor = null;
+      this.votesReceived = new Set();
+      this.resetElectionInterval();
+    }
+  }
+
+  receiveData (data) {
+    if (this.state != NODE_STATE.LEADER) {
+      return;
+    }
+
+    this.logs.push({ term: this.term, msg: data });
+    this.ackedLength.set(this.nodeId, this.logs.length);
+
+    // Replicate logs for all nodes
+    this.nodes.forEach((nodeId) => {
+      if (nodeId == this.nodeId) {
+        return;
+      }
+
+      this.replicateLog(nodeId);
+    });
   }
 }
 

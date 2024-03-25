@@ -16,6 +16,7 @@ document.querySelector("#app").innerHTML = `
     </div>
     <button id="resetLeader">Reset Leader</button>
     <button id="addNode">Add Node</button>
+    <button id="addData">Send Data</button>
   </div>
 `;
 
@@ -23,7 +24,7 @@ const NUM_NODES = 5; // Default number of nodes at the start
 
 console.log("Initializing network...");
 const network = new Network(NUM_NODES);
-network.setLeader(0);
+// network.setLeader(0);
 
 document.getElementById("resetLeader").addEventListener("click", () => {
   console.log("RESET LEADER TO FOLLOWER");
@@ -32,4 +33,14 @@ document.getElementById("resetLeader").addEventListener("click", () => {
 
 document.getElementById("addNode").addEventListener("click", () => {
   network.addNode();
+});
+
+let currentMsg = 1;
+document.getElementById("addData").addEventListener("click", () => {
+  if (!network.leader) {
+    console.log('NO LEADER DEFINED');
+    return;
+  }
+
+  network.nodes[network.leader - 1].receiveData(currentMsg++);
 });
