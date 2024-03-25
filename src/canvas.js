@@ -60,21 +60,42 @@ export function getNodePositions(numOfNodes) {
   return nodePositions;
 }
 
+export function updateNodePositions(nodePositions, numOfNodes) {
+  const currentLength = nodePositions.length;
+  for (let i = 0; i < numOfNodes; i++) {
+    const angle = (i / (numOfNodes / 2)) * Math.PI;
+    const x = NETWORK_RADIUS * Math.cos(angle) + (NETWORK_RADIUS * 2 + 50) / 2;
+    const y = NETWORK_RADIUS * Math.sin(angle) + (NETWORK_RADIUS * 2 + 50) / 2;
+
+    if (i < currentLength) {
+      nodePositions[i]["x"] = x;
+      nodePositions[i]["y"] = y;
+    } else {
+      nodePositions.push({ x, y });
+    }
+  }
+}
+
 export function drawNode(context, nodePosition, node) {
-  const { x, y } = nodePosition;
   let lastFrameTimestamp = 0;
   let angle = 0;
   let electionTimeoutInSeconds = node.electionTimeout / 1000;
 
+  let oldX = nodePosition.x;
+  let oldY = nodePosition.y;
+
   function animationFrame(milliseconds) {
     // clear previous ui
-    context.clearRect(x - 30, y - 30, 70, 70);
+    context.clearRect(oldX - 30, oldY - 30, 70, 70);
 
     // update angle
+    const { x, y } = nodePosition;
     const elapsed = lastFrameTimestamp ? milliseconds - lastFrameTimestamp : 0;
     const elapsedSeconds = elapsed / 1000;
     angle += (elapsedSeconds / electionTimeoutInSeconds) * 2 * Math.PI;
     lastFrameTimestamp = milliseconds;
+    oldX = x;
+    oldY = y;
 
     context.beginPath();
     context.arc(x, y, 25, 0, angle);
@@ -119,6 +140,9 @@ export async function showDataTransfer(
   let lastFrameTimestamp = 0;
   let x = startCoords.x;
   let y = startCoords.y;
+  const endX = endCoords.x;
+  const endY = endCoords.y;
+
 
   if (startCoords.x == endCoords.x && startCoords.y == endCoords.y) {
     return;
@@ -158,8 +182,8 @@ export async function showDataTransfer(
       const newerData = distanceAndAngleBetweenTwoPoints(
         x,
         y,
-        endCoords.x,
-        endCoords.y
+        endX,
+        endY,
       );
       if (Math.abs(Math.floor(data.angle) - Math.floor(newerData.angle)) > 2) {
         networkContext.clearRect(x - 15, y - 15, 30, 30); // TODO: Come up with better values

@@ -1,5 +1,5 @@
 import NodeFactory from "./NodeFactory";
-import { clearNodes,drawNode, drawNodes, getNodePositions, showDataTransfer } from "./canvas";
+import { clearNodes,drawNode, drawNodes, getNodePositions, showDataTransfer, updateNodePositions } from "./canvas";
 import { MESSAGE_TYPE} from "./types";
 
 class Network {
@@ -59,7 +59,7 @@ class Network {
     });
   }
 
-   createNode(nodeId){
+  createNode(nodeId){
     const node = this.nodeFactory.createNode(nodeId, this.nodeIds); 
     const senderBc = new BroadcastChannel(nodeId);
     const receiverBc = new BroadcastChannel(nodeId);
@@ -67,21 +67,26 @@ class Network {
     receiverBc.onmessage = (event) => {
       node.onMessageReceived(event);
     };
-       return node
-   }
+    return node
+  }
 
-  addNode(){
-    let nodeId = this.nextNodeId++;
+  addNode() {
+    const context = this.canvas?.nodes?.getContext("2d");
+    const nodeId = this.nextNodeId++;
+
     this.nodeIds.push(nodeId);
     this.nodes.push(this.createNode(nodeId));
-   // TODO: find a better way to stop existing animations
-      const oldPositions = this.nodePositions;
-      setTimeout(() => {
-    clearNodes(this.canvas.nodes.getContext("2d") , oldPositions);
-      },Network.MAX_ELECTION_TIMEOUT);
-    this.nodePositions = getNodePositions(this.nodes.length);
-    this.renderCanvas();
-    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE}, -1);
+
+    // Updates node positions in place so that the rendering function
+    // can directly start using the newer locations
+    updateNodePositions(this.nodePositions, this.nodes.length);
+    drawNode(
+      context,
+      this.nodePositions[this.nodes.length - 1],
+      this.nodes[this.nodes.length - 1]
+    );
+
+    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE }, -1);
   }
 
   broadcastFn = async (senderIndex, msg, receiverIndex) => {
