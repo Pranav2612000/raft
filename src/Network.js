@@ -10,10 +10,10 @@ import {
 import { MESSAGE_TYPE } from "./types";
 
 class Network {
-  static HEARTBEAT = 4000;
+  static HEARTBEAT = 5000;
   static MAX_ELECTION_TIMEOUT = 9000;
   static MIN_ELECTION_TIMEOUT = 6000;
-  static NETWORK_DELAY = 1000; // in milliseconds
+  static NETWORK_DELAY = 1500; // in milliseconds
 
   constructor(numOfNodes) {
     this.numOfNodes = numOfNodes;
