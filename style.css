@@ -106,11 +106,13 @@ button:focus-visible {
 
 #nodes {
   position: absolute;
+  left: 0px;
   z-index: 1;
 }
 
 #network {
   position: absolute;
+  left: 0px;
   z-index: 2;
 
   border: 2px solid black;
