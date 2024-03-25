@@ -86,7 +86,7 @@ class Network {
       this.nodes[this.nodes.length - 1]
     );
 
-    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE }, -1);
+    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE, nodeId }, -1);
   }
 
   broadcastFn = async (senderIndex, msg, receiverIndex) => {
