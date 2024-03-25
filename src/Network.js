@@ -96,7 +96,7 @@ class Network {
       this.nodes[this.nodes.length - 1]
     );
 
-    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE }, -1);
+    this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE, nodeId }, -1);
   }
 
   broadcastFn = async (senderIndex, msg, receiverIndex) => {
@@ -112,6 +112,11 @@ class Network {
         if (senderIndex - 1 === index) {
           return;
         }
+
+        if (msg.type === MESSAGE_TYPE.HEARTBEAT) {
+          this.leader = senderIndex;
+        }
+
         await showDataTransfer(
           this.canvas,
           this.nodePositions[senderIndex - 1],
