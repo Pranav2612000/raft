@@ -6,7 +6,7 @@ class Node {
   // as election timeout.
   constructor(
     nodeId,
-    numOfNodes,
+    nodes,
     minElectionTimeout,
     maxElectionTimeout,
     heartbeat,
@@ -16,7 +16,7 @@ class Node {
     term = 0
   ) {
     this.nodeId = nodeId;
-    this.numOfNodes = numOfNodes;
+    this.nodes = nodes || [];
     this.minElectionTimeout = minElectionTimeout;
     this.maxElectionTimeout = maxElectionTimeout;
     this.heartbeat = heartbeat;
@@ -181,7 +181,7 @@ class Node {
         return;
       }
       case MESSAGE_TYPE.NEW_NODE: {
-        this.numOfNodes += 1;
+        this.nodes.push(msg.nodeId);
         return;
       }
       default: {
@@ -197,10 +197,6 @@ class Node {
     const CLogLength = msg.logLength;
     const cLogLastTerm = msg.logLastTerm;
 
-    // If this node itself is requesting votes, then do nothing and return
-    // if (cNodeId == this.nodeId) {
-    //   return
-    // }
 
     if (cTerm > this.term) {
       this.term = cTerm;
@@ -255,7 +251,7 @@ class Node {
       granted
     ) {
       this.votesReceived.add(voterId);
-      if (this.votesReceived.size >= Math.ceil((this.numOfNodes + 1) / 2)) {
+      if (this.votesReceived.size >= Math.ceil((this.nodes.length + 1) / 2)) {
         this.setLeader();
       }
     } else if (voterTerm > this.term) {

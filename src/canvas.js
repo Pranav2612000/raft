@@ -1,8 +1,8 @@
 import { MESSAGE_TYPE } from "./types";
 
-export const CANVAS_HEIGHT = 375;
-export const CANVAS_WIDTH = 375;
-const NETWORK_RADIUS = 150; // Radius of the circle around which the nodes are placed
+export const CANVAS_HEIGHT = 470;
+export const CANVAS_WIDTH = 470;
+const NETWORK_RADIUS = 200; // Radius of the circle around which the nodes are placed
 const NODE_FILL_COLOR = "#e3dada";
 
 function drawCircle(context, centerX, centerY, radius, fillStyle) {
@@ -53,7 +53,7 @@ export function getNodePositions(numOfNodes) {
 }
 
 export function drawNode(context, nodePosition, node) {
-  const {x, y} = nodePosition;
+  const { x, y } = nodePosition;
   let lastFrameTimestamp = 0;
   let angle = 0;
   let electionTimeoutInSeconds = node.electionTimeout / 1000;
@@ -63,11 +63,9 @@ export function drawNode(context, nodePosition, node) {
     context.clearRect(x - 30, y - 30, 70, 70);
 
     // update angle
-    const elapsed = lastFrameTimestamp
-      ? milliseconds - lastFrameTimestamp
-      : 0;
+    const elapsed = lastFrameTimestamp ? milliseconds - lastFrameTimestamp : 0;
     const elapsedSeconds = elapsed / 1000;
-    angle += ((elapsedSeconds / electionTimeoutInSeconds) * 2 * Math.PI);
+    angle += (elapsedSeconds / electionTimeoutInSeconds) * 2 * Math.PI;
     lastFrameTimestamp = milliseconds;
 
     context.beginPath();
@@ -83,14 +81,21 @@ export function drawNode(context, nodePosition, node) {
     }
 
     window.requestAnimationFrame(animationFrame);
-  } 
+  }
 
   window.requestAnimationFrame(animationFrame);
 }
 
-export function drawNodes(context, nodePositions, nodes) {
+export function drawNodes(canvas,context, nodePositions, nodes) {
   for (let i = 0; i < nodePositions.length; i++) {
     drawNode(context, nodePositions[i], nodes[i]);
+  }
+}
+
+export function clearNodes(context, nodePositions) {
+  for (let i = 0; i < nodePositions.length; i++) {
+    const {x,y} = nodePositions[i];
+    context.clearRect(x - 30, y - 30, 70, 70); // TODO: Come up with better values
   }
 }
 

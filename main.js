@@ -11,6 +11,7 @@ document.querySelector("#app").innerHTML = `
       <canvas id='nodes' width=${CANVAS_WIDTH} height=${CANVAS_HEIGHT} /></canvas>
     </div>
     <button id="resetLeader">Reset Leader</button>
+    <button id="addNode">Add Node</button>
   </div>
 `;
 
@@ -21,6 +22,10 @@ const network = new Network(NUM_NODES);
 network.setLeader(0);
 
 document.getElementById("resetLeader").addEventListener("click", () => {
-  console.log("REST LEADER TO FOLLOWER");
+  console.log("RESET LEADER TO FOLLOWER");
   network.resetLeader();
+});
+
+document.getElementById("addNode").addEventListener("click", () => {
+  network.addNode();
 });
