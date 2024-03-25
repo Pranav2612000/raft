@@ -5,7 +5,7 @@ export const CANVAS_WIDTH = 470;
 const NETWORK_RADIUS = 200; // Radius of the circle around which the nodes are placed
 const NODE_FILL_COLOR = "#e3dada";
 
-function drawCircle(context, centerX, centerY, radius, fillStyle) {
+function drawCircle(context, centerX, centerY, radius, fillStyle, text) {
   context.beginPath();
   context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
   if (fillStyle) {
@@ -15,6 +15,14 @@ function drawCircle(context, centerX, centerY, radius, fillStyle) {
   context.lineWidth = 2;
   context.strokeStyle = "gray";
   context.stroke();
+
+  if (text) {
+    context.font = '20px Georgia';
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    // Keep text as single letter
+    context.fillText(text, centerX, centerY + 3);
+  }
 }
 
 function distanceAndAngleBetweenTwoPoints(x1, y1, x2, y2) {
@@ -71,7 +79,7 @@ export function drawNode(context, nodePosition, node) {
     context.beginPath();
     context.arc(x, y, 25, 0, angle);
     context.stroke();
-    drawCircle(context, x, y, 15, NODE_FILL_COLOR);
+    drawCircle(context, x, y, 15, NODE_FILL_COLOR, node.nodeId);
 
     // exit if we've reached th end
     if (angle > 2 * Math.PI) {
