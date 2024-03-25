@@ -102,6 +102,11 @@ class Network {
         if (senderIndex - 1 === index) {
           return;
         }
+
+        if (msg.type === MESSAGE_TYPE.HEARTBEAT) {
+          this.leader = senderIndex;
+        }
+
         await showDataTransfer(
           this.canvas,
           this.nodePositions[senderIndex - 1],
