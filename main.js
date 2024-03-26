@@ -3,6 +3,52 @@ import "./style.css";
 import Network from "./src/Network";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./src/canvas";
 
+window.isPaused = false;
+window.setInterval = (fn, duration) => {
+  let isRunning = true;
+  let currentDuration;
+  let currentCancelFn = () => null;
+  let currentResolve;
+
+  const mainLoop = async () => {
+    while(isRunning) {
+      currentDuration = duration;
+
+      while (currentDuration > 0) {
+        if (window.isPaused) {
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve();
+            }, 1000);
+          });
+          continue;
+        }
+        await new Promise((resolve) => {
+          currentResolve = resolve;
+          currentCancelFn = setTimeout(() => {
+            resolve();
+          }, 200);
+        });
+        currentDuration = currentDuration - 200;
+      }
+      if (isRunning) {
+        fn();
+      }
+    }
+  };
+  mainLoop();
+
+  return () => {
+    clearTimeout(currentCancelFn);
+    currentResolve();
+    isRunning = false;
+  }
+}
+
+window.clearInterval = (intervalFn) => {
+  intervalFn();
+}
+
 document.querySelector("#app").innerHTML = `
   <div class="main">
     <h1>Raft</h1>
@@ -17,6 +63,7 @@ document.querySelector("#app").innerHTML = `
     <button id="resetLeader">Reset Leader</button>
     <button id="addNode">Add Node</button>
     <button id="addData">Send Data</button>
+    <button id="pause">Play / Pause</button>
   </div>
 `;
 
@@ -43,4 +90,11 @@ document.getElementById("addData").addEventListener("click", () => {
   }
 
   network.nodes[network.leader - 1].receiveData(currentMsg++);
+});
+document.getElementById("pause").addEventListener("click", () => {
+  if (window.isPaused) {
+    window.isPaused = false;
+  } else {
+    window.isPaused = true;
+  }
 });

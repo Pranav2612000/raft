@@ -109,7 +109,20 @@ export function drawNode(context, nodePosition, node) {
       return;
     }
 
-    window.requestAnimationFrame(animationFrame);
+    const recurse = async () => {
+      while (window.isPaused) {
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 1000);
+        });
+        lastFrameTimestamp += 1000;
+      }
+
+      window.requestAnimationFrame(animationFrame);
+    };
+
+    recurse();
   }
 
   window.requestAnimationFrame(animationFrame);
@@ -237,7 +250,20 @@ export async function showDataTransfer(
       }
 
       // Otherwise display the next animation
-      window.requestAnimationFrame(animationFrame);
+      const recurse = async () => {
+        while (window.isPaused) {
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve();
+            }, 1000);
+          });
+          lastFrameTimestamp += 1000;
+        }
+
+        window.requestAnimationFrame(animationFrame);
+      };
+
+      recurse();
     }
     window.requestAnimationFrame(animationFrame);
   });
