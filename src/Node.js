@@ -1,5 +1,5 @@
 import { MESSAGE_TYPE, NODE_STATE } from "./types";
-import { Entry } from "./Entry";
+// import fs from "fs";
 
 class Node {
   // The node chooses a random time between minElectionTimeout and maxElectionTimeout
@@ -61,11 +61,30 @@ class Node {
     }
 
     if (leaderCommit > this.commitLength) {
-      for (let i = this.commitLength; i < leaderCommit; i++) {
-        // deliver to application
-      }
-      this.commitLength = leaderCommit;
+      this.commit(this.commitLength, leaderCommit);
     }
+  }
+
+  // Writes to file in range logs[start,end)
+  commit(start, end) {
+    console.log("committing at node ", this.nodeId);
+    const data = this.logs.slice(start, end).map((log) => log.msg);
+
+    this.db = this.db.concat(data);
+    this.commitLength = end;
+
+    // Not compatible in browser
+    /** 
+    fs.appendFile(`./data/${this.nodeId}.dat`, data.join("\n"), (err) => {
+      if (err) {
+        return console.log(err);
+      }
+      console.log(
+        `[${this.nodeId}]: Persisted in storage in range [${start},${end})`
+      );
+      this.commitLength = end;
+    });
+    */
   }
 
   startElectionInterval() {
@@ -190,6 +209,7 @@ class Node {
       }
       case MESSAGE_TYPE.NEW_NODE: {
         this.nodes.push(msg.nodeId);
+        this.ackedLength.set(msg.nodeId, 0);
         if (this.state == NODE_STATE.LEADER) {
           this.replicateLog(msg.nodeId);
         }
@@ -209,6 +229,10 @@ class Node {
         console.log("Unknown message type received at receiver channel !");
       }
     }
+  }
+
+  getQuorum() {
+    return Math.ceil((this.nodes.length + 1) / 2);
   }
 
   handleVoteRequest(msg) {
@@ -271,7 +295,7 @@ class Node {
       granted
     ) {
       this.votesReceived.add(voterId);
-      if (this.votesReceived.size >= Math.ceil((this.nodes.length + 1) / 2)) {
+      if (this.votesReceived.size >= this.getQuorum()) {
         // setting the current node as the leader
         this.setLeader();
 
@@ -388,7 +412,7 @@ class Node {
       if (success == true && ack >= this.ackedLength.get(nodeId)) {
         this.sentLength.set(nodeId, ack);
         this.ackedLength.set(nodeId, ack);
-        // this.commit();
+        this.leaderCommit();
       } else if (this.sentLength[nodeId] > 0) {
         this.sentLength.set(nodeId, this.sentLength.get(nodeId) - 1);
         this.replicateLog(nodeId);
@@ -399,6 +423,30 @@ class Node {
       this.votedFor = null;
       this.votesReceived = new Set();
       this.resetElectionInterval();
+    }
+  }
+
+  leaderCommit() {
+    const minAcks = this.getQuorum();
+    const ready = this.logs.map((log, index) => {
+      // if (index < this.commitLength) return -1;
+      const acks = this.nodes.filter((node) => {
+        return this.ackedLength.get(node) >= index + 1;
+      }).length;
+
+      if (acks >= minAcks) {
+        return index + 1;
+      }
+      return -1;
+    });
+
+    const maxReady = Math.max(...ready);
+    if (
+      ready.length != 0 &&
+      maxReady > this.commitLength &&
+      this.logs[maxReady - 1].term == this.term
+    ) {
+      this.commit(this.commitLength, maxReady);
     }
   }
 

@@ -11,7 +11,7 @@ window.setInterval = (fn, duration) => {
   let currentResolve;
 
   const mainLoop = async () => {
-    while(isRunning) {
+    while (isRunning) {
       currentDuration = duration;
 
       while (currentDuration > 0) {
@@ -42,12 +42,12 @@ window.setInterval = (fn, duration) => {
     clearTimeout(currentCancelFn);
     currentResolve();
     isRunning = false;
-  }
-}
+  };
+};
 
 window.clearInterval = (intervalFn) => {
   intervalFn();
-}
+};
 
 document.querySelector("#app").innerHTML = `
   <div class="main">
@@ -71,7 +71,7 @@ const NUM_NODES = 5; // Default number of nodes at the start
 
 console.log("Initializing network...");
 const network = new Network(NUM_NODES);
-// network.setLeader(0);
+network.setLeader(0);
 
 document.getElementById("resetLeader").addEventListener("click", () => {
   console.log("RESET LEADER TO FOLLOWER");
@@ -85,7 +85,7 @@ document.getElementById("addNode").addEventListener("click", () => {
 let currentMsg = 1;
 document.getElementById("addData").addEventListener("click", () => {
   if (!network.leader) {
-    console.log('NO LEADER DEFINED');
+    console.log("NO LEADER DEFINED");
     return;
   }
 
