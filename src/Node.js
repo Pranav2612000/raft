@@ -42,6 +42,10 @@ class Node {
     this.ackedLength = new Map();
 
     this.commitLength = 0;
+
+    setInterval(() => {
+      console.log("DATA ", this.nodeId, this.db);
+    }, 4000);
   }
 
   appendLog(prefixLen, leaderCommit, suffix) {
@@ -151,6 +155,8 @@ class Node {
   }
 
   startHeartbeatBroadcast() {
+    // Don't send commit length first time on becomming leader
+    // Let the nodes replicate the data first.
     this.broadcastFn(
       this.nodeId,
       {
@@ -164,6 +170,7 @@ class Node {
         this.nodeId,
         {
           type: MESSAGE_TYPE.HEARTBEAT,
+          leaderCommit: this.commitLength,
         },
         -1
       );
@@ -197,6 +204,7 @@ class Node {
     switch (msg.type) {
       case MESSAGE_TYPE.HEARTBEAT: {
         this.resetElectionInterval();
+        this.handleHeartbeat(msg);
         return;
       }
       case MESSAGE_TYPE.REQUEST_VOTE: {
@@ -233,6 +241,13 @@ class Node {
 
   getQuorum() {
     return Math.ceil((this.nodes.length + 1) / 2);
+  }
+
+  handleHeartbeat(msg) {
+    const { leaderCommit } = msg;
+    if (this.commitLength < leaderCommit) {
+      this.commit(this.commitLength, leaderCommit);
+    }
   }
 
   handleVoteRequest(msg) {
