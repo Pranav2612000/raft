@@ -161,6 +161,7 @@ class Node {
       this.nodeId,
       {
         type: MESSAGE_TYPE.HEARTBEAT,
+        data: this.createHeartbeatData(),
       },
       -1
     );
@@ -170,7 +171,7 @@ class Node {
         this.nodeId,
         {
           type: MESSAGE_TYPE.HEARTBEAT,
-          leaderCommit: this.commitLength,
+          data: this.createHeartbeatData(),
         },
         -1
       );
@@ -204,7 +205,7 @@ class Node {
     switch (msg.type) {
       case MESSAGE_TYPE.HEARTBEAT: {
         this.resetElectionInterval();
-        this.handleHeartbeat(msg);
+        this.handleLogRequest(msg.data[this.nodeId]);
         return;
       }
       case MESSAGE_TYPE.REQUEST_VOTE: {
@@ -241,13 +242,6 @@ class Node {
 
   getQuorum() {
     return Math.ceil((this.nodes.length + 1) / 2);
-  }
-
-  handleHeartbeat(msg) {
-    const { leaderCommit } = msg;
-    if (this.commitLength < leaderCommit) {
-      this.commit(this.commitLength, leaderCommit);
-    }
   }
 
   handleVoteRequest(msg) {
@@ -338,7 +332,7 @@ class Node {
     this.resetElectionInterval();
   }
 
-  replicateLog(followerId) {
+  createLogRequest(type, followerId) {
     const leaderId = this.nodeId;
 
     const prefixLen = this.sentLength.get(followerId) || 0;
@@ -349,23 +343,36 @@ class Node {
       prefixTerm = this.logs[prefixLen - 1].term;
     }
 
+    return {
+      type: type,
+      leaderId: leaderId,
+      currentTerm: this.term,
+      prefixLen: prefixLen,
+      prefixTerm: prefixTerm,
+      commitLength: this.commitLength,
+      suffix: suffix,
+    };
+  }
+
+  createHeartbeatData() {
+    let msg = {};
+    for (const nodeId of this.nodes) {
+      msg[nodeId] = this.createLogRequest(MESSAGE_TYPE.HEARTBEAT, nodeId);
+    }
+    return msg;
+  }
+
+  replicateLog(followerId) {
     this.broadcastFn(
       this.nodeId,
-      {
-        type: MESSAGE_TYPE.LOG_REQUEST,
-        leaderId: leaderId,
-        currentTerm: this.term,
-        prefixLen: prefixLen,
-        prefixTerm: prefixTerm,
-        commitLength: this.commitLength,
-        suffix: suffix,
-      },
+      this.createLogRequest(MESSAGE_TYPE.LOG_REQUEST, followerId),
       followerId
     );
   }
 
   handleLogRequest(msg) {
     const {
+      type,
       leaderId,
       currentTerm,
       prefixLen,
@@ -373,7 +380,6 @@ class Node {
       commitLength,
       suffix,
     } = msg;
-
     if (currentTerm > this.term) {
       this.term = currentTerm;
       this.votedFor = null;
@@ -394,6 +400,11 @@ class Node {
 
       const ack = prefixLen + suffix.length;
 
+      if (type === MESSAGE_TYPE.HEARTBEAT) {
+        if (this.commitLength < commitLength)
+          this.commit(this.commitLength, commitLength);
+        return;
+      }
       this.broadcastFn(
         this.nodeId,
         {
