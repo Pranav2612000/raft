@@ -74,6 +74,10 @@ export function updateNodePositions(nodePositions, numOfNodes) {
       nodePositions.push({ x, y });
     }
   }
+
+  if (numOfNodes < nodePositions.length) {
+    nodePositions.splice(numOfNodes);
+  }
 }
 
 export function drawNode(context, nodePosition, node) {
@@ -87,6 +91,10 @@ export function drawNode(context, nodePosition, node) {
   function animationFrame(milliseconds) {
     // clear previous ui
     context.clearRect(oldX - 30, oldY - 30, 70, 70);
+
+    if (node.nodeId == undefined) {
+      return;
+    }
 
     // update angle
     const { x, y } = nodePosition;
@@ -126,6 +134,11 @@ export function drawNode(context, nodePosition, node) {
   }
 
   window.requestAnimationFrame(animationFrame);
+}
+
+export function eraseNode(context, nodePosition) {
+  const { x, y } = nodePosition;
+  context.clearRect(x - 30, y - 30, 70, 70); // TODO: Come up with better values
 }
 
 export function drawNodes(canvas,context, nodePositions, nodes) {

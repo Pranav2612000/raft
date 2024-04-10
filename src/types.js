@@ -2,6 +2,7 @@ export const NODE_STATE = Object.freeze({
   FOLLOWER: 0,
   LEADER: 1,
   CANDIATE: 2,
+  DELETED: 3,
 });
 
 export const MESSAGE_TYPE = Object.freeze({
@@ -11,4 +12,5 @@ export const MESSAGE_TYPE = Object.freeze({
   NEW_NODE: 3,
   LOG_REQUEST: 4,
   LOG_RESPONSE: 5,
+  DELETE_NODE: 6,
 });
