@@ -42,10 +42,31 @@ class Node {
     this.ackedLength = new Map();
 
     this.commitLength = 0;
+  }
 
-    setInterval(() => {
-      console.log("DATA ", this.nodeId, this.db);
-    }, 4000);
+  delete() {
+    this.nodeId = undefined;
+    this.nodes = [];
+    this.minElectionTimeout = undefined;
+    this.maxElectionTimeout = undefined;
+    this.heartbeat = undefined;
+
+    this.state = NODE_STATE.DELETED;
+    this.term = undefined;
+
+    this.logs = [];
+    this.db = [];
+
+    clearInterval(this.electionInterval);
+
+    this.votedFor = undefined;
+    this.votesReceived = undefined;
+    this.broadcastFn = undefined;
+
+    this.sentLength = undefined;
+    this.ackedLength = undefined;
+
+    this.commitLength = undefined;
   }
 
   appendLog(prefixLen, leaderCommit, suffix) {
@@ -222,6 +243,12 @@ class Node {
         if (this.state == NODE_STATE.LEADER) {
           this.replicateLog(msg.nodeId);
         }
+        return;
+      }
+      case MESSAGE_TYPE.DELETE_NODE: {
+        const nodeToBeDeleted = msg.nodeId;
+        this.nodes = this.nodes.filter((id) => id != nodeToBeDeleted);
+        this.ackedLength?.delete(nodeToBeDeleted);
         return;
       }
       case MESSAGE_TYPE.LOG_REQUEST: {

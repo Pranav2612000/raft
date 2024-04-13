@@ -62,6 +62,7 @@ document.querySelector("#app").innerHTML = `
     </div>
     <button id="resetLeader">Reset Leader</button>
     <button id="addNode">Add Node</button>
+    <button id="removeNode">Remove Node</button>
     <button id="addData">Send Data</button>
     <button id="pause">Play / Pause</button>
   </div>
@@ -80,6 +81,10 @@ document.getElementById("resetLeader").addEventListener("click", () => {
 
 document.getElementById("addNode").addEventListener("click", () => {
   network.addNode();
+});
+
+document.getElementById("removeNode").addEventListener("click", () => {
+  network.removeLastNode();
 });
 
 let currentMsg = 1;

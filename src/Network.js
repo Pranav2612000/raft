@@ -3,6 +3,7 @@ import {
   clearNodes,
   drawNode,
   drawNodes,
+  eraseNode,
   getNodePositions,
   showDataTransfer,
   updateNodePositions,
@@ -97,6 +98,30 @@ class Network {
     );
 
     this.broadcastFn(-1, { type: MESSAGE_TYPE.NEW_NODE, nodeId }, -1);
+  }
+
+  removeLastNode() {
+    const nodeToBeDeleted = this.nextNodeId - 1;
+    this.nextNodeId = this.nextNodeId - 1;
+
+    this.removeNode(nodeToBeDeleted);
+  }
+
+  removeNode(nodeToBeDeleted) {
+    const context = this.canvas?.nodes?.getContext("2d");
+    eraseNode(context, this.nodePositions[nodeToBeDeleted - 1]);
+
+    this.nodes[nodeToBeDeleted - 1].delete();
+    this.nodeIds = this.nodeIds.filter((id) => id != nodeToBeDeleted);
+    this.nodes = this.nodes.filter((_, index) => index != (nodeToBeDeleted - 1));
+    this.senderBcs[nodeToBeDeleted - 1].close();
+    this.senderBcs = this.senderBcs.filter((_, index) => index != (nodeToBeDeleted - 1));
+
+    // Updates node positions in place so that the rendering function
+    // can directly start using the newer locations
+    updateNodePositions(this.nodePositions, this.nodes.length);
+
+    this.broadcastFn(-1, { type: MESSAGE_TYPE.DELETE_NODE, nodeId: nodeToBeDeleted }, -1);
   }
 
   broadcastFn = async (senderIndex, msg, receiverIndex) => {
