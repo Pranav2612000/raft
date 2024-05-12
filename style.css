@@ -113,6 +113,22 @@ button:focus-visible {
     flex-wrap: wrap;
     gap: 0.5rem;
 }
+
+#footer {
+  display: flex;
+  justify-content: space-between;
+
+  padding-inline: 1rem;
+
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+
+  width: calc(100vw - 2rem);
+
+  background-color: #f5ebeb;
+}
+
 @media (max-width: 512px){
 
   #operations {
@@ -120,7 +136,10 @@ button:focus-visible {
     align-items: center;
     justify-content: center;
     gap: 1rem;
-}
+  }
+  #footer {
+    flex-direction: column;
+  }
 }
 #board {
   position: relative;

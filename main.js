@@ -68,6 +68,11 @@ document.querySelector("#app").innerHTML = `
         <button id="addData">Send Data</button>
     </div>
   </div>
+  <div id="footer">
+    <div> <a href="https://github.com/Pranav2612000/raft" target="_blank">View Source</a></div>
+    <div>
+      Made by <a href="https://vasusharma7.github.io" target="_blank">Vasu Sharma</a> and <a href="https://pranavjoglekarcodes.web.app" target="_blank">Pranav Joglekar</a></div>
+  </div>
 `;
 
 const NUM_NODES = 5; // Default number of nodes at the start
