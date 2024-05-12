@@ -32,6 +32,7 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  margin: unset;
 }
 
 #app {
@@ -39,6 +40,7 @@ h1 {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  max-height: 100vw;
 }
 
 .logo {
@@ -84,7 +86,7 @@ button:focus-visible {
 .main {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.3rem;
   align-items: center;
   justify-content: center;
 }
@@ -99,6 +101,12 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+
+  #operations {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 
