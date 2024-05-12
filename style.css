@@ -85,6 +85,8 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (prefers-color-scheme: light) {
@@ -116,4 +118,13 @@ button:focus-visible {
   z-index: 2;
 
   border: 2px solid black;
+}
+
+
+#operations {
+    display: flex;
+    flex-direction: row;
+    width: 50vw;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }

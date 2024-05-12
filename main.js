@@ -52,6 +52,7 @@ window.clearInterval = (intervalFn) => {
 document.querySelector("#app").innerHTML = `
   <div class="main">
     <h1>Raft</h1>
+    <button id="pause">Play / Pause</button>
     <div id='board' style="height: ${CANVAS_HEIGHT}px; width: ${CANVAS_WIDTH}px;">
       <canvas id='network'
         width=${CANVAS_WIDTH}
@@ -60,11 +61,12 @@ document.querySelector("#app").innerHTML = `
       ></canvas>
       <canvas id='nodes' width=${CANVAS_WIDTH} height=${CANVAS_HEIGHT} /></canvas>
     </div>
-    <button id="resetLeader">Reset Leader</button>
-    <button id="addNode">Add Node</button>
-    <button id="removeNode">Remove Node</button>
-    <button id="addData">Send Data</button>
-    <button id="pause">Play / Pause</button>
+    <div id="operations">
+        <button id="resetLeader">Reset Leader</button>
+        <button id="addNode">Add Node</button>
+        <button id="removeNode">Remove Node</button>
+        <button id="addData">Send Data</button>
+    </div>
   </div>
 `;
 
