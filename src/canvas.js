@@ -1,8 +1,9 @@
 import { MESSAGE_TYPE } from "./types";
 
-export const CANVAS_HEIGHT = 470;
-export const CANVAS_WIDTH = 470;
-const NETWORK_RADIUS = 200; // Radius of the circle around which the nodes are placed
+const isMobile = screen.width < 512;
+export let CANVAS_HEIGHT = isMobile ? 200 : 470;
+export let CANVAS_WIDTH = isMobile ? 200 : 470;
+let NETWORK_RADIUS = isMobile ? 75 : 200; // Radius of the circle around which the nodes are placed
 const NODE_FILL_COLOR = "#e3dada";
 
 function drawCircle(context, centerX, centerY, radius, fillStyle, text, textSize = '20px') {
